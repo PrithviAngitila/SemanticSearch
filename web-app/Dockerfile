@@ -7,6 +7,7 @@ RUN pip install -r requirements.txt
 
 # RUN llama2-llm ollama run llama2:7b
 
-COPY . .
+COPY . /app
+EXPOSE 6000
 
 CMD ["python", "app.py"]

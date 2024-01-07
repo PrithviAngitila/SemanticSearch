@@ -7,15 +7,22 @@ services:
       - ollama_data:/root/.ollama
     ports:
       - "11434:11434"
-    # command: /bin/sh -c "ls"
+    networks:
+      - my_network
 
   flask-app:
     build: ./web-app
     container_name: flask-app
     ports:
-      - "5001:5000"
+      - "6000:6000"
+    networks:
+      - my_network
     depends_on:
       - ollama
+
+networks:
+  my_network:
+    driver: bridge
 
 volumes:
   ollama_data:
