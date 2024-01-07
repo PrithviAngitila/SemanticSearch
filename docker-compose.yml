@@ -1,0 +1,21 @@
+version: '3'
+services:
+  ollama:
+    image: ollama/ollama
+    container_name: llama2-llm
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    # command: /bin/sh -c "ls"
+
+  flask-app:
+    build: ./web-app
+    container_name: flask-app
+    ports:
+      - "5001:5000"
+    depends_on:
+      - ollama
+
+volumes:
+  ollama_data:
