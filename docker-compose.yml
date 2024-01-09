@@ -1,0 +1,28 @@
+version: '3'
+services:
+  ollama:
+    image: ollama/ollama
+    container_name: llama2-llm
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - my_network
+
+  flask-app:
+    build: ./web-app
+    container_name: flask-app
+    ports:
+      - "6000:6000"
+    networks:
+      - my_network
+    depends_on:
+      - ollama
+
+networks:
+  my_network:
+    driver: bridge
+
+volumes:
+  ollama_data:
