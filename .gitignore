@@ -1,0 +1,48 @@
+# Ignore compiled files
+*.o
+*.out
+*.exe
+
+# Ignore log and temporary files
+*.log
+*.tmp
+
+# Ignore user-specific files
+.idea/
+.vscode/
+
+# Ignore dependencies
+node_modules/
+vendor/
+
+# Ignore environment-specific files
+.env
+.env.local
+.env.*.local
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore compiled Java files
+target/
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore editor-specific files
+*.sublime-project
+*.sublime-workspace
+*.vscode/
+*.idea/
+
+# Ignore system files that might be created on different platforms
+Thumbs.db
+ehthumbs.db
+
+# Ignore database files
+*.sqlite
+*.sqlite3
+*.db

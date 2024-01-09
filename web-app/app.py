@@ -1,28 +1,68 @@
-from flask import Flask, request, jsonify
+import logging
+import os
 import requests
+from flask import Flask, jsonify, request
+from pydantic import ValidationError
+from validator import Search
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET'])
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+@app.route("/", methods=["GET"])
 def hello():
-    return jsonify(message='Hello, Ollama!')
+    return jsonify(message="Hello, Ollama!")
 
 
-@app.route('/api/search', methods=['GET'])
+def build_request(query):
+    container_name = os.environ.get("CONTAINER_NAME", "")
+    port = os.environ.get("LLM_PORT", "")
+    url = f"http://{container_name}:{port}/api/generate"
+    payload = {
+        "model": os.environ.get("MODEL", "llama2"),
+        "prompt": query,
+        "stream": False,
+        "format": "json",
+    }
+    return url, payload
+
+
+@app.route("/api/search", methods=["GET"])
 def genAI():
-    input_text = request.args.get('text', 'no data')
-    print(input_text)
-    # Process the input_text (you can replace this with your logic)
-    url = "http://ollama:11434/api/generate"
+    try:
+        search = Search.from_dict(request.args)
+        # build request
+        url, payload = build_request(search.query)
+        # Make a POST request with JSON payload
+        response = requests.post(url, json=payload)
+        status_code = response.status_code
+        output = response.json()
 
-    # Sample JSON payload
-    payload = {"model": "llama2:7b", "prompt": input_text, "stream": False, "format": "json"}
+        if status_code == 200:
+            return jsonify({"status": status_code, "message": output["response"]})
+        else:
+            return jsonify({"status": status_code, "message": "Internal server error"})
 
-    # Make a POST request with JSON payload
-    response = requests.post(url, json=payload)
-    
-    # Return a JSON response
-    return jsonify({'status': response.status_code, "message": response.json()})
+    except ValidationError as e:
+        # Log the validation error
+        logger.error(f"Validation error: {str(e)}")
+        return jsonify({"error": str(e), "status": 400})
+    except Exception as ex:
+        # Log other exceptions
+        logger.exception(f"An error occurred: {str(ex)}")
+        return jsonify({"error": "Internal server error", "status": 500})
 
-if __name__ == '__main__':
-    app.run(debug=True, host ='0.0.0.0', port=6000)
+
+if __name__ == "__main__":
+    app.run(
+        debug=os.environ.get("LOG_LEVEL", 'info'),
+        host="0.0.0.0",
+        port=int(os.environ.get("FLASK_PORT", 5000)),
+    )
