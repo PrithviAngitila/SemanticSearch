@@ -1,6 +1,12 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
-WORKDIR /app
+
+WORKDIR /app 
+
+RUN apt-get update && \
+    apt-get install -y build-essential
+# RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+# RUN pip install torch torchvision torchaudio
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
