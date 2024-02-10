@@ -1,10 +1,11 @@
 import logging
 import os
 import requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from pydantic import ValidationError
-from validator import Search
+from validator import Search, LLMSearch
 from dotenv import load_dotenv
+from generator import Generator
 
 # Load environment variables from .env file
 load_dotenv()
@@ -34,10 +35,11 @@ def build_request(query):
     return url, payload
 
 
-@app.route("/api/search", methods=["GET"])
+
+@app.route("/api/llmsearch", methods=["GET"])
 def genAI():
     try:
-        search = Search.from_dict(request.args)
+        search = LLMSearch.from_dict(request.args)
         # build request
         url, payload = build_request(search.query)
         # Make a POST request with JSON payload
@@ -58,6 +60,28 @@ def genAI():
         # Log other exceptions
         logger.exception(f"An error occurred: {str(ex)}")
         return jsonify({"error": "Internal server error", "status": 500})
+
+
+@app.route("/api/search")
+def semantic_search():
+    try:
+        search = Search.from_dict(request.args)
+        search_type = search.search_type
+         # build request
+        gen = Generator(search_type)
+        result = gen.completion(search.query)
+        
+        return jsonify({"message": result})
+
+    except ValidationError as e:
+        # Log the validation error
+        logger.error(f"Validation error: {str(e)}")
+        return jsonify({"error": str(e), "status": 400})
+    except Exception as ex:
+        # Log other exceptions
+        logger.exception(f"An error occurred: {str(ex)}")
+        return jsonify({"error": "Internal server error", "status": 500})
+
 
 
 if __name__ == "__main__":
